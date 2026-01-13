@@ -3,7 +3,7 @@ from video_sources.laptop_video_source import LaptopVideoSource
 from video_sources.rio_video_source import RioVideoSource
 from pupil_apriltags.bindings import Detection
 
-from process_frame import process_frame
+from process_frame import process_frame, rotation_matrix_to_euler_angles
 
 from networktables import NetworkTables
 
@@ -14,8 +14,8 @@ import cv2
 video_source: VideoSource = RioVideoSource()
 
 
-# NetworkTables.initialize(server="10.17.40.2")  # 10.TE.AM.2
-NetworkTables.initialize(server="roboRIO-1740-FRC.local")
+NetworkTables.initialize(server="10.17.40.2")  # 10.TE.AM.2
+# NetworkTables.initialize(server="roboRIO-1740-FRC.local")
 
 table = NetworkTables.getTable("vision")
 
@@ -41,7 +41,16 @@ while True:
         table.putBoolean("Tag Detected", True)
         for i, tag in enumerate(tags):
             cx, cy = tag.center # type: ignore
-            table.putNumberArray(f"tag{i}", [cx, cy])
+            roll, pitch, yaw = rotation_matrix_to_euler_angles(tag.pose_R)
+            table.putNumberArray(f"tag{i}", [
+                cx, 
+                cy, 
+                tag.pose_t[2][0], # type: ignore
+                -tag.pose_t[0][0], # type: ignore
+                yaw
+            ])
+            table.putString(f"tag{i}pose_r", str(tag.pose_R))
+            table.putString(f"tag{i}pose_t", str(tag.pose_t))
 
     # Show windows
     cv2.imshow("Camera", frame)

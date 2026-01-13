@@ -58,7 +58,14 @@ def process_frame(gray_img: npt.NDArray) -> dict:
     tag_size_meters = 0.1651
     tags: list[Detection] = _detect_tags(gray_img, tag_size_meters)  # type: ignore
     
-    print(tags)
+    # if len(tags) > 0:
+    #     # print(str(tags[0].pose_t).replace("\n", ""))
+    #     # print(tags[0].pose_t[2][0], # type: ignore
+    #     #             -tags[0].pose_t[0][0] # type: ignore
+    #     #             )
+    #     # print(str(tags[0].pose_R).replace("\n", ""))
+    #     roll, pitch, yaw = rotation_matrix_to_euler_angles(tags[0].pose_R)
+    #     print(roll, pitch, yaw)
 
     # Copy the image so we don't mutate the input
     debug_img = cv2.cvtColor(gray_img, cv2.COLOR_GRAY2BGR)
@@ -88,3 +95,19 @@ def process_frame(gray_img: npt.NDArray) -> dict:
         "tags": tags,
         "debug_image": debug_img,
     }
+
+def rotation_matrix_to_euler_angles(R):
+    sy = np.sqrt(R[0, 0]**2 + R[1, 0]**2)
+
+    singular = sy < 1e-6
+
+    if not singular:
+        roll = np.arctan2(R[1, 0], R[0, 0])
+        pitch = np.arctan2(R[2, 1], R[2, 2])
+        yaw = -np.arctan2(-R[2, 0], sy)
+    else:
+        roll = 0
+        pitch = np.arctan2(-R[1, 2], R[1, 1])
+        yaw = -np.arctan2(-R[2, 0], sy)
+    
+    return roll, pitch, yaw

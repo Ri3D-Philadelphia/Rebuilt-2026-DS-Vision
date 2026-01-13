@@ -6,7 +6,9 @@ class RioVideoSource(VideoSource):
     """Video source from Rio."""
     
     def __init__(self):
+        print("Trying to connect to RIO video stream")
         self.cap = cv2.VideoCapture("http://roborio-1740-frc.local:1181/stream.mjpg")
+        print("Connected to RIO video stream")
 
     def get_frame(self) -> npt.NDArray | None:
         # ret, frame = self.cap.read()
